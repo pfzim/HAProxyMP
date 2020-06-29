@@ -1,0 +1,84 @@
+﻿  <ManagementPackFragment SchemaVersion="2.0" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+    <Monitoring>
+      <Rules>
+        <Rule ID="HAProxy.Performance.Collect.Rule" Target="HAProxy.Class" Enabled="true" ConfirmDelivery="false" Remotable="true" Priority="Normal">
+          <Category>PerformanceHealth</Category>
+          <DataSources>
+            <DataSource ID="DS" TypeID="UnixAuth!Unix.Authoring.TimedShellScript.PropertyBag.DataSource">
+              <Interval>120</Interval>
+              <TargetSystem>$Target/Host/Property[Type="MUL!Microsoft.Unix.Computer"]/NetworkName$</TargetSystem>
+              <ShellScript>
+                <![CDATA[#!/bin/sh
+
+echo show stat | socat /var/run/haproxy.sock - | awk -F ',' '{ if(NR > 1 &amp;&amp; $0) { print $1 "," $2 ",current_session_rate," $34 "\n" $1 "," $2 ",http_responses_5xx," $43 } }'
+echo show table public | socat /var/run/haproxy.sock - | awk -F '[= ]' '{ if(NR > 1 &amp;&amp; $0) { print "public,category," $3 "," $9 } }'
+]]>
+              </ShellScript>
+              <ScriptArguments></ScriptArguments>
+              <Timeout>60</Timeout>
+              <UserName>$RunAs[Name="MUL!Microsoft.Unix.ActionAccount"]/UserName$</UserName>
+              <Password>$RunAs[Name="MUL!Microsoft.Unix.ActionAccount"]/Password$</Password>
+              <PSScriptName>HAProxy.Performance.Collect.Rule.ps1</PSScriptName>
+              <PSScriptBody>
+<![CDATA[
+	param (
+		[string] $StdOut,
+		[string] $StdErr,
+		[string] $ReturnCode
+	)
+	$api = New-Object -comObject 'MOM.ScriptAPI'
+
+	[array] $out = $StdOut -split "`n"
+	foreach($line in $out)
+	{
+		[array] $values = $line -split ","
+
+		if($values.Count -eq 4)
+		{
+			  $bag = $api.CreatePropertyBag()
+			  $bag.AddValue("CounterObject", $values[0].Trim())
+			  $bag.AddValue("CounterInstance", $values[1].Trim())
+			  $bag.AddValue("CounterName", $values[2].Trim())
+			  $bag.AddValue("CounterValue", $values[3].Trim())
+			  $bag
+		}
+	}
+]]>
+              </PSScriptBody>
+              <FilterExpression>
+                <RegExExpression>
+                  <ValueExpression>
+                    <XPathQuery>Property[@Name='CounterValue']</XPathQuery>
+                  </ValueExpression>
+                  <Operator>MatchesRegularExpression</Operator>
+                  <Pattern>^[-+]?\d*[0-9]*(\.[0-9]+)?[Ee]?[-+]?[0-9]*$</Pattern>
+                </RegExExpression>
+              </FilterExpression>
+            </DataSource>
+          </DataSources>
+          <ConditionDetection ID="Mapper" TypeID="Perf!System.Performance.DataGenericMapper">
+            <ObjectName>$Data/Property[@Name='CounterObject']$</ObjectName>
+            <CounterName>$Data/Property[@Name='CounterName']$</CounterName>
+            <InstanceName>$Data/Property[@Name='CounterInstance']$</InstanceName>
+            <Value>$Data/Property[@Name='CounterValue']$</Value>
+          </ConditionDetection>
+          <WriteActions>
+            <WriteAction ID="WriteToDB" TypeID="SC!Microsoft.SystemCenter.CollectPerformanceData" />
+            <WriteAction ID="WriteToDW" TypeID="MSDL!Microsoft.SystemCenter.DataWarehouse.PublishPerformanceData" />
+          </WriteActions>
+        </Rule>
+      </Rules>
+    </Monitoring>
+
+    <LanguagePacks>
+      <LanguagePack ID="ENU" IsDefault="true">
+        <DisplayStrings>
+          <DisplayString ElementID="HAProxy.Performance.Collect.Rule">
+            <Name>HAProxy Performance Collector Rule (pfzim)</Name>
+            <Description>HAProxy  multiple peformance counters from a single command execution</Description>
+          </DisplayString>
+        </DisplayStrings>
+      </LanguagePack>
+    </LanguagePacks>
+  </ManagementPackFragment>
+
