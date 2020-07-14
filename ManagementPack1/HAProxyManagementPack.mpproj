@@ -84,6 +84,9 @@
     <Compile Include="HAProxy.Discovery.mpx">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="HAProxy.Folder.mpx">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="HAProxy.Performance.Collect.Rule.mpx">
       <SubType>Code</SubType>
     </Compile>

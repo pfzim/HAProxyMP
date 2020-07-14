@@ -3,7 +3,7 @@
   <Manifest>
     <Identity>
       <ID>HAProxy.MP</ID>
-      <Version>1.0.0.52</Version>
+      <Version>1.0.0.64</Version>
     </Identity>
     <Name>HAProxyManagementPack</Name>
     <References>
@@ -269,10 +269,10 @@
                 #!/bin/sh
 
 echo show stat | socat /var/run/haproxy.sock - | awk -F ',' '{ if(NR &gt; 1 &amp;amp;&amp;amp; $0) { print $1 "," $2 ",current_session_rate," $34 "\n" $1 "," $2 ",http_responses_5xx," $43 } }'
-echo show table public | socat /var/run/haproxy.sock - | awk -F '[= ]' '{ if(NR &gt; 1 &amp;amp;&amp;amp; $0) { print "public,category," $3 "," $9 } }'
+echo show table $1 | socat /var/run/haproxy.sock - | awk -F '[= ]' "{ if(NR &gt; 1 &amp;amp;&amp;amp; $0) { print \"$1,category,\" $3 \",\" $9 } }"
 
               </ShellScript>
-            <ScriptArguments></ScriptArguments>
+            <ScriptArguments>$Target/Property[Type="HAProxy.Class"]/Frontend$</ScriptArguments>
             <Timeout>60</Timeout>
             <UserName>$RunAs[Name="MUL!Microsoft.Unix.ActionAccount"]/UserName$</UserName>
             <Password>$RunAs[Name="MUL!Microsoft.Unix.ActionAccount"]/Password$</Password>
@@ -327,6 +327,34 @@ echo show table public | socat /var/run/haproxy.sock - | awk -F '[= ]' '{ if(NR 
       </Rule>
     </Rules>
   </Monitoring>
+  <Presentation>
+    <Views>
+      <View ID="HAProxy.Alert.View" Accessibility="Internal" Enabled="true" Target="HAProxy.Class" TypeID="SC!Microsoft.SystemCenter.AlertViewType" Visible="true">
+        <Category>Custom</Category>
+        <Criteria>
+          <ResolutionState>
+            <StateRange Operator="NotEquals">255</StateRange>
+          </ResolutionState>
+        </Criteria>
+      </View>
+      <View ID="HAProxy.Perf.View" Accessibility="Internal" Enabled="true" Target="HAProxy.Class" TypeID="SC!Microsoft.SystemCenter.PerformanceViewType" Visible="true">
+        <Category>Custom</Category>
+        <Criteria />
+      </View>
+      <View ID="HAProxy.State.View" Accessibility="Internal" Enabled="true" Target="HAProxy.Class" TypeID="SC!Microsoft.SystemCenter.StateViewType" Visible="true">
+        <Category>Custom</Category>
+        <Criteria />
+      </View>
+    </Views>
+    <Folders>
+      <Folder ID="HAProxy.Root.Folder" Accessibility="Internal" ParentFolder="SC!Microsoft.SystemCenter.Monitoring.ViewFolder.Root" />
+    </Folders>
+    <FolderItems>
+      <FolderItem ElementID="HAProxy.Alert.View" ID="HAProxy.Alert.View.FolderItem" Folder="HAProxy.Root.Folder" />
+      <FolderItem ElementID="HAProxy.Perf.View" ID="HAProxy.Perf.View.FolderItem" Folder="HAProxy.Root.Folder" />
+      <FolderItem ElementID="HAProxy.State.View" ID="HAProxy.State.View.FolderItem" Folder="HAProxy.Root.Folder" />
+    </FolderItems>
+  </Presentation>
   <LanguagePacks>
     <LanguagePack ID="ENU" IsDefault="true">
       <DisplayStrings>
@@ -343,6 +371,22 @@ echo show table public | socat /var/run/haproxy.sock - | awk -F '[= ]' '{ if(NR 
         <DisplayString ElementID="HAProxy.Class.Discovery">
           <Name>HAProxy Class Discovery</Name>
           <Description></Description>
+        </DisplayString>
+        <DisplayString ElementID="HAProxy.Alert.View">
+          <Name>Alerts</Name>
+          <Description />
+        </DisplayString>
+        <DisplayString ElementID="HAProxy.Perf.View">
+          <Name>Performance</Name>
+          <Description />
+        </DisplayString>
+        <DisplayString ElementID="HAProxy.Root.Folder">
+          <Name>HAProxy MP</Name>
+          <Description />
+        </DisplayString>
+        <DisplayString ElementID="HAProxy.State.View">
+          <Name>State</Name>
+          <Description />
         </DisplayString>
         <DisplayString ElementID="HAProxy.Performance.Collect.Rule">
           <Name>HAProxy Performance Collector Rule (pfzim)</Name>
