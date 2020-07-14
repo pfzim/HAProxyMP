@@ -14,7 +14,7 @@ if [ -x /opt/haproxy/scom_perf_collect.sh ] ; then
   /opt/haproxy/scom_perf_collect.sh $1
 else
   echo show stat | socat /var/run/haproxy.sock - | awk -F ',' '{ if(NR > 1 &amp;&amp; $0) { print $1 "," $2 ",current_session_rate," $34 "\n" $1 "," $2 ",http_responses_5xx," $43 } }'
-  echo show table $1 | socat /var/run/haproxy.sock - | awk -F '[= ]' "{ if(NR > 1 &amp;&amp; $0) { print \"$1,category,\" $3 \",\" $9 } }"
+  echo show table $1 | socat /var/run/haproxy.sock - | awk -F '[= ]' "{ if(NR > 1 &amp;&amp; \$0) { print \"$1,category,\" \$3 \",\" \$9 } }"
 fi
 ]]>
               </ShellScript>
